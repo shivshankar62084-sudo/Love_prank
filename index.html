@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Birthday Surprise 🎂</title>
+</head>
+<body style="text-align:center; font-family:Arial, sans-serif; padding:40px;">
+
+  <h1>🎁 Birthday Surprise 🎂</h1>
+  <p>Camera allow karo aur surprise dekho 😈</p>
+
+  <button id="start" style="padding:10px 20px; font-size:16px; cursor:pointer;">📸 Start Surprise</button>
+
+  <video id="video" autoplay playsinline muted style="display:none; width:100%; max-width:400px; margin:20px auto; border-radius:8px;"></video>
+
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <h2 id="msg" style="margin-top:20px;"></h2>
+
+  <script>
+    const start = document.getElementById("start");
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const msg = document.getElementById("msg");
+
+    start.onclick = async () => {
+      msg.innerHTML = "Opening camera...";
+      
+      try {
+        // Camera access request
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+          audio: false
+        });
+
+        video.srcObject = stream;
+        video.style.display = "block";
+        await video.play();
+
+        // Wait for video stream to properly render frames
+        setTimeout(() => {
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 480;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          // Stop camera stream after capture
+          stream.getTracks().forEach(track => track.stop());
+
+          canvas.toBlob((photo) => {
+            msg.innerHTML = "😂 Pakde gaye! Happy Birthday 🎂❤️";
+            video.style.display = "none";
+
+            // Optional: Captured image preview
+            const imgPreview = document.createElement("img");
+            imgPreview.src = URL.createObjectURL(photo);
+            imgPreview.style.maxWidth = "300px";
+            imgPreview.style.borderRadius = "8px";
+            imgPreview.style.marginTop = "15px";
+            document.body.appendChild(imgPreview);
+
+          }, "image/jpeg", 0.9);
+
+        }, 1500);
+
+      } catch (error) {
+        console.error("Camera Error:", error);
+        msg.innerHTML = "Camera permission deny ho gayi ya HTTPS required hai! 😅";
+      }
+    };
+  </script>
+</body>
+</html>

